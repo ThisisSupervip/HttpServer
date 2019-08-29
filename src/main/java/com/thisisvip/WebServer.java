@@ -1,10 +1,14 @@
 package com.thisisvip;
 
 import com.thisisvip.enums.ContentType;
+import sun.nio.ch.ThreadPool;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class WebServer implements Runnable {
@@ -22,8 +26,7 @@ public class WebServer implements Runnable {
 
     public static void main(String[] args) {
 
-        // ExecutorService executor = new ThreadPoolExecutor(N_THREADS,N_THREADS,
-        //       10L, TimeUnit.SECONDS,new ArrayBlockingQueue<>(N_THREADS));
+
         WebServer server = new WebServer(getPortParam(args));
         server.listener();
 
@@ -39,11 +42,13 @@ public class WebServer implements Runnable {
     }
 
     private void listener(){
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(N_THREADS,N_THREADS,1L, TimeUnit.SECONDS,new LinkedBlockingDeque<>());
         while (true) {
             try {
                 socket = serverSocket.accept();
                 Thread t = new Thread(this);
                 t.start();
+                //threadPoolExecutor.execute(this);
             } catch (IOException e) {
 
             }
@@ -53,19 +58,17 @@ public class WebServer implements Runnable {
     @Override
     public void run() {
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            String buffer;
-            logger.info("\n\n客户端:");
-            while ((buffer = br.readLine()) != null && !buffer.equals("")) {
-                System.out.println(buffer);
-            }
-            bw.write("HTTP/1.1 200 OK\n");
-            bw.write("Content-Type: " + ContentType.HTML + "; charset=UTF-8\n\n");
-            bw.write("<html><body><h1>Hello World</h1></body></html>");
-            bw.flush();
-            bw.close();
-            br.close();
+
+
+            System.out.println("===================");
+            HttpRequest request = new HttpRequest(socket.getInputStream());
+            HttpResponse response = new HttpResponse(request);
+            System.out.println(request.toString());
+            System.out.println(response.responseHeader);
+            System.out.println("===================");
+            OutputStream out = socket.getOutputStream();
+            out.write(response.toBytes());
+            out.flush();
             socket.close();
 
         } catch (IOException e) {

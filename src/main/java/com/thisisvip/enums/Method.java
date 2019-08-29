@@ -1,5 +1,6 @@
 package com.thisisvip.enums;
 
+
 public enum Method {
 
     DELETE("DElETE"),
@@ -9,7 +10,8 @@ public enum Method {
     PUT("PUT"),
     OPTIONS("OPTIONS"),
     TRACE("TRACE"),
-    CONNECT("CONNECT");
+    CONNECT("CONNECT"),
+    UNDEFINED("UNDEFINED");
 
     private String method;
 
